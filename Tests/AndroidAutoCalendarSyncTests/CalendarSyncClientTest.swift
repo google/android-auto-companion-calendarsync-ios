@@ -21,7 +21,7 @@ import AndroidAutoCalendarSyncProtos
 
 @testable import AndroidAutoCalendarSync
 
-class CalendarSyncClientTest: XCTestCase {
+@MainActor class CalendarSyncClientTest: XCTestCase {
   private let referenceDate =
     Calendar.current.date(from: DateComponents(year: 1990, month: 11, day: 11))!
 

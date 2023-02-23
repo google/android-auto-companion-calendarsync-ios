@@ -16,8 +16,8 @@
 import AndroidAutoConnectedDeviceManager
 @_implementationOnly import AndroidAutoEventKit
 @_implementationOnly import AndroidAutoEventKitProtocol
+import AndroidAutoLogger
 import EventKit
-import os.log
 @_implementationOnly import AndroidAutoCalendarSyncProtos
 
 /// Client for the calendar sync companion feature.
@@ -63,10 +63,7 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
     case notAuthorized
   }
 
-  private static let log = OSLog(
-    subsystem: "com.google.ios.aae.calendarsync",
-    category: "CalendarSyncClient"
-  )
+  private static let log = Logger(for: CalendarSyncClient.self)
 
   private static let featureUUID = UUID(uuidString: "5a1a16fd-1ebd-4dbe-bfa7-37e40de0fd80")!
 
@@ -114,12 +111,12 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
     end endDate: Date
   ) {
     guard calendars.count > 0 else {
-      os_log("No calendars provided", log: CalendarSyncClient.log, type: .error)
+      Self.log.error("No calendars provided.")
       return
     }
 
     guard startDate < endDate else {
-      os_log("startDate is after endDate", log: CalendarSyncClient.log, type: .error)
+      Self.log.error("startDate is after endDate.")
       return
     }
 
@@ -139,11 +136,10 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
       do {
         try send(calendars: calendars, withStart: startDate, end: endDate, to: car)
       } catch {
-        os_log(
-          "Encountered error syncing calendars to car %@: %@",
-          log: Self.log,
-          car.name ?? car.id,
-          error.localizedDescription)
+        Self.log.error(
+          "Encountered error syncing calendars to car \(car.name ?? car.id)," +
+          " \(error.localizedDescription)"
+        )
       }
     }
   }
@@ -179,7 +175,7 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
   ///   - carId: The identifier of the car or `nil` to unsync calendars from all connected cars.
   public func unsync(calendarIdentifiers: [String], forCarId carId: String?) {
     guard calendarIdentifiers.count > 0 else {
-      os_log("No calendar identifiers provided", log: CalendarSyncClient.log, type: .error)
+      Self.log.error("No calendar identifiers provided.")
       return
     }
 
@@ -206,10 +202,8 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
       }
 
       guard isCarSecurelyConnected(car) else {
-        os_log(
-          "Request to unsync calendars from unconnected car %@. Ignoring.",
-          log: Self.log,
-          car.name ?? car.id)
+        Self.log(
+          "Request to unsync calendars from unconnected car \(car.name ?? car.id). Ignoring.")
         continue
       }
 
@@ -217,9 +211,7 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
         let data = try calendarsProto.serializedData()
         try sendMessage(data, to: car)
       } catch {
-        os_log(
-          "Failed to unsync calendars. Error: %@", log: CalendarSyncClient.log, type: .error,
-          "\(error)")
+        Self.log.error("Failed to unsync calendars. Error: \(error)")
       }
     }
   }
@@ -228,18 +220,13 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
 
   public override func onSecureChannelEstablished(for car: Car) {
     guard let syncDatas = dataToSync[car] else {
-      os_log(
-        "Car %@ connected, but no stored calendar sync for that car. Ignoring.",
-        log: Self.log,
-        type: .debug,
-        car.name ?? car.id)
+      Self.log.debug(
+        "Car \(car.name ?? car.id) connected, but no stored calendar sync for that car. Ignoring.")
       return
     }
 
-    os_log(
-      "Secure channel established for car %@. Syncing stored calendar data.",
-      log: Self.log,
-      car.name ?? car.id)
+    Self.log(
+      "Secure channel established for car \(car.name ?? car.id). Syncing stored calendar data.")
 
     do {
       for syncData in syncDatas {
@@ -250,12 +237,9 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
           to: car)
       }
     } catch {
-      os_log(
-        "Encountered an error sending message to car %@: %@",
-        log: Self.log,
-        type: .error,
-        car.name ?? car.id,
-        error.localizedDescription)
+      Self.log.error(
+        "Encountered an error sending message to car \(car.name ?? car.id):" +
+        "\(error.localizedDescription)")
     }
   }
 
@@ -272,16 +256,15 @@ public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtoco
     to car: Car
   ) throws {
     guard isCarSecurelyConnected(car) else {
-      os_log(
-        "Request to sync to car %@, but not currently connected. Will sync when it is.",
-        log: CalendarSyncClient.log,
-        car.name ?? car.id)
+      Self.log(
+        "Request to sync to car \(car.name ?? car.id), but not currently connected. Will sync " +
+        "when it is.")
       return
     }
 
     let eventsList = try eventStore.events(for: calendars, withStart: startDate, end: endDate)
     guard eventsList.count > 0 else {
-      os_log("No events to send", log: CalendarSyncClient.log, type: .debug)
+      Self.log.debug("No events to send.")
       return
     }
 

@@ -13,17 +13,14 @@
 // limitations under the License.
 
 import AndroidAutoEventKitProtocol
+import AndroidAutoLogger
 import EventKit
-import os.log
 import AndroidAutoCalendarSyncProtos
 
 /// Participant exporter to convert a native iOS participant into a proto.
 enum ParticipantExporter {
 
-  static let log = OSLog(
-    subsystem: "com.google.ios.aae.calendarsync.exporter",
-    category: "ParticipantExporter"
-  )
+  static let log = Logger(for: ParticipantExporter.self)
 
   static func proto(from participants: [Participant]) -> [Aae_Calendarsync_Attendee] {
     return participants.map { proto(from: $0) }
@@ -76,9 +73,7 @@ enum ParticipantExporter {
     case .delegated, .completed, .inProcess:
       return .unspecifiedStatus
     @unknown default:
-      os_log(
-        "Unhandled EKParticipantStatus value %d",
-        log: ParticipantExporter.log, type: .error, status.rawValue)
+      Self.log.error("Unhandled EKParticipantStatus value \(status.rawValue).")
       return .unspecifiedStatus
     }
   }

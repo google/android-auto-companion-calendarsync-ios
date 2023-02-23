@@ -13,20 +13,16 @@
 // limitations under the License.
 
 import AndroidAutoEventKitProtocol
+import AndroidAutoLogger
 import EventKit
 import UIKit
-import os.log
 import AndroidAutoCalendarSyncProtos
 
 public typealias ProtocolCalendar = AndroidAutoEventKitProtocol.Calendar
 
 /// An event exporter to convert native iOS events into protos.
 public enum EventsExporter {
-
-  private static let log = OSLog(
-    subsystem: "com.google.ios.aae.calendarsync.exporter",
-    category: "EventsExporter"
-  )
+  private static let log = Logger(for: EventsExporter.self)
 
   public static func proto(from events: [CalendarEvent]) -> Aae_Calendarsync_Calendars {
     var calendars: [String: Aae_Calendarsync_Calendar] = [:]
@@ -100,9 +96,7 @@ public enum EventsExporter {
       // Ignore for now.
       fallthrough
     @unknown default:
-      os_log(
-        "Unhandled EKEventStatus value %d",
-        log: EventsExporter.log, type: .error, status.rawValue)
+      Self.log.error("Unhandled EKEventStatus value \(status.rawValue).")
       return .unspecifiedStatus
     }
   }
