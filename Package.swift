@@ -27,7 +27,7 @@ let package = Package(
       targets: ["AndroidAutoCalendarSync"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/google/android-auto-companion-ios.git", branch: "3.0.1"),
+    .package(url: "https://github.com/google/android-auto-companion-ios.git", from: "3.0.1"),
     .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.20.0"),
   ],
   targets: [
