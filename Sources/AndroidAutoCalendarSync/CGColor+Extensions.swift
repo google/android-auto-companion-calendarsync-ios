@@ -12,9 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// Placeholder for CalendarSync Protos.
-///
-/// This file needs to be here to trigger the build for the `AndroidAutoCalendarSyncProtos` module
-/// from the corresponding Swift Package Manager target. A plugin will generate the source files for
-/// each proto file in this directory, but there has to be at least one Swift file (this
-/// placeholder) in this directory to trigger the build rules.
+import Foundation
+import UIKit
+
+extension CGColor {
+  /// Returns the color as ARGB value.
+  public func argb() -> UInt32 {
+    let color = UIColor(cgColor: self)
+    var r: CGFloat = 0
+    var g: CGFloat = 0
+    var b: CGFloat = 0
+    var a: CGFloat = 0
+
+    color.getRed(&r, green: &g, blue: &b, alpha: &a)
+
+    return UInt32(a * 255) << 24 | UInt32(r * 255) << 16 | UInt32(g * 255) << 8 | UInt32(b * 255)
+  }
+}

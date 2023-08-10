@@ -12,43 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoEventKitProtocol
-import EventKit
+import AndroidAutoCalendarSync
 import Foundation
 
 /// A mock calendar event.
-public struct MockCalendarEvent: CalendarEvent {
-  public var eventIdentifier: String!
-  public var startDate: Date!
-  public var endDate: Date!
-  public var isAllDay: Bool
-  public var organizer: Participant?
-  public var status: EKEventStatus
+struct MockCalendarEvent: CalendarEvent {
+  var eventID: String
+  var startDate: Date!
+  var endDate: Date!
+  var isAllDay: Bool
+  var organizer: MockParticipant?
+  var eventStatus: EventStatus
+  var calendar: MockCalendar!
 
-  public var calendar: ProtocolCalendar!
-  public var title: String!
-  public var location: String?
-  public var creationDate: Date?
-  public var lastModifiedDate: Date?
-  public var timeZone: TimeZone?
-  public var notes: String?
-  public var attendees: [Participant]?
+  var title: String!
+  var location: String?
+  var creationDate: Date?
+  var lastModifiedDate: Date?
+  var timeZone: TimeZone?
+  var notes: String?
+  var attendees: [MockParticipant]?
 
-  public init(
-    eventIdentifier: String!, startDate: Date!, endDate: Date!, isAllDay: Bool = false,
-    organizer: Participant? = nil, status: EKEventStatus = .none, calendar: ProtocolCalendar!,
+  init(
+    eventID: String, startDate: Date, endDate: Date, isAllDay: Bool = false,
+    organizer: MockParticipant? = nil, status: EventStatus = .none, calendar: MockCalendar,
     title: String!, location: String? = nil, creationDate: Date? = nil,
     lastModifiedDate: Date? = nil, timeZone: TimeZone? = nil, notes: String? = nil,
-    attendees: [Participant]? = nil
+    attendees: [MockParticipant]? = nil
   ) {
-    self.eventIdentifier = eventIdentifier
+    self.eventID = eventID
     self.startDate = startDate
     self.endDate = endDate
     self.isAllDay = isAllDay
     self.organizer = organizer
-    self.status = status
-
+    self.eventStatus = status
     self.calendar = calendar
+
     self.title = title
     self.location = location
     self.creationDate = creationDate

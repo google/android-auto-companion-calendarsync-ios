@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,29 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoEventKitProtocol
-import EventKit
-import UIKit
-
-public typealias Calendar = AndroidAutoEventKitProtocol.Calendar
-
-/// A wrapper around 'EKCalendar' that will it conform to 'Calendar'.
-struct EKCalendarWrapper: Calendar {
-  let calendar: EKCalendar
-
-  init(calendar: EKCalendar) {
-    self.calendar = calendar
-  }
-
-  var title: String {
-    return calendar.title
-  }
-
-  var calendarIdentifier: String {
-    return calendar.calendarIdentifier
-  }
-
-  var cgColor: CGColor! {
-    return calendar.cgColor
-  }
+/// `Error` thrown by CalendarSyncClients to communicate failures back to the client.
+public enum CalendarSyncClientError: Error {
+  /// User did not grant permission to use calendar.
+  case notAuthorized
 }

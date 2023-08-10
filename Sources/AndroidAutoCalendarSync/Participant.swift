@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import EventKit
-
 /// The protocol of a participant.
 public protocol Participant {
   /// A Boolean value indication whether this participant represents the owner of this account.
@@ -22,12 +20,28 @@ public protocol Participant {
   /// The participant's name.
   var name: String? { get }
 
-  /// The participant's role in the event.
-  var participantRole: EKParticipantRole { get }
+  /// The status of the participant in the event.
+  var status: ParticipantStatus { get }
 
-  /// The participant's attendence status.
-  var participantStatus: EKParticipantStatus { get }
+  /// The participant's type including role in the event.
+  var type: ParticipantType { get }
+}
 
-  /// The participant's type.
-  var participantType: EKParticipantType { get }
+/// Participant status aligned with the corresponding calendar proto status.
+public enum ParticipantStatus: Int {
+  case unspecified
+  case none
+  case accepted
+  case declined
+  case invited
+  case tentative
+}
+
+/// Participant type including role aligned with the corresponding calendar proto type.
+public enum ParticipantType: Int {
+  case unspecified
+  case none
+  case optional
+  case required
+  case resource
 }

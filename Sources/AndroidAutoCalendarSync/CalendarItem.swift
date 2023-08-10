@@ -16,8 +16,11 @@ import EventKit
 
 // The protocol of a calendar item.
 public protocol CalendarItem {
+  associatedtype ItemCalendar: AndroidAutoCalendarSync.Calendar
+  associatedtype ItemParticipant: Participant
+
   /// The calendar for the calendar item.
-  var calendar: Calendar! { get }
+  var calendar: ItemCalendar! { get }
 
   /// The title for the calendar item.
   var title: String! { get }
@@ -38,5 +41,5 @@ public protocol CalendarItem {
   var notes: String? { get }
 
   /// The attendees associated with the calendar item.
-  var attendees: [Participant]? { get }
+  var attendees: [ItemParticipant]? { get }
 }

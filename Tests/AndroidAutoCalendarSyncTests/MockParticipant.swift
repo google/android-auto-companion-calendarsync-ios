@@ -12,26 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoEventKitProtocol
-import EventKit
+import AndroidAutoCalendarSync
 
 /// A mock participant.
-public struct MockParticipant: Participant {
-  public var isCurrentUser: Bool
-  public var name: String?
-  public var participantRole: EKParticipantRole
-  public var participantStatus: EKParticipantStatus
-  public var participantType: EKParticipantType
+struct MockParticipant: Participant {
+  var isCurrentUser: Bool
+  var name: String?
+  var status: ParticipantStatus
+  var type: ParticipantType
 
-  public init(
-    isCurrentUser: Bool = false, name: String? = nil,
-    participantRole: EKParticipantRole = .required,
-    participantStatus: EKParticipantStatus = .accepted, participantType: EKParticipantType = .person
+  init(
+    isCurrentUser: Bool = false,
+    name: String? = nil,
+    status: ParticipantStatus = .accepted,
+    type: ParticipantType = .required
   ) {
     self.isCurrentUser = isCurrentUser
     self.name = name
-    self.participantRole = participantRole
-    self.participantStatus = participantStatus
-    self.participantType = participantType
+    self.status = status
+    self.type = type
   }
 }

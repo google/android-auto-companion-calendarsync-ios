@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,331 +12,70 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCalendarExporter
 import AndroidAutoConnectedDeviceManager
-@_implementationOnly import AndroidAutoEventKit
-@_implementationOnly import AndroidAutoEventKitProtocol
-import AndroidAutoLogger
-import EventKit
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+import Foundation
 
-/// Client for the calendar sync companion feature.
-///
-/// Calling the `sync` method will observe a secure channel from the `ConnectedCarManager` and send
-/// the events for the provided calendar(s) that are within a given timeframe over to the specified
-/// car.
-///
-/// Sample usage:
-///
-/// ```
-/// let calendarSyncClient = CalendarSyncClient(
-///   eventStore: EKEventStore(),
-///   connectedCarManager: connectionManager
-/// )
-///
-/// let ekCalendars = eventStore.calendars(for: .event).filter { ... }
-/// let startDate = Date()
-/// let endDate =
-///   Calendar.current.date(byAdding: DateComponents(day: daysToSync), to: startDate)!
-///
-/// calendarSyncClient.sync(
-///   calendars: ekCalendars, forCarId: carId, withStart: startDate, end: endDate)
-/// ```
-///
-/// Calling the `unsync` method will cause the removal of the provided calendar identifiers from
-/// the specified car.
-///
-/// Sample usage of `unsync`:
-///
-/// ```
-/// let calendarIdentifiers = ekCalendars.map { $0.calendarIdentifier }
-/// calendarSyncClient.unsync(calendarIdentifiers: calendarIdentifiers, forCarId: carId)
-/// ```
-///
-/// If `nil` is provided as car identifier for `sync` or `unsync` the client will use all cars that
-/// have a secure channel established rather than just a single specific car.
-public final class CalendarSyncClient: FeatureManager, CalendarSyncClientProtocol {
-
-  /// `Error` thrown by CalendarSyncClient to communicate failures back to the client.
-  public enum CalendarSyncClientError: Error {
-    /// User did not grant permission to use calendar.
-    case notAuthorized
-  }
-
-  private static let log = Logger(for: CalendarSyncClient.self)
-
-  private static let featureUUID = UUID(uuidString: "5a1a16fd-1ebd-4dbe-bfa7-37e40de0fd80")!
-
-  private let eventStore: EKEventStore
-
-  /// Map of cars to the data that should be synced for them.
-  ///
-  /// These calendars are stored so that when a car disconnects and reconnects, the data would be
-  /// resynced. Note that each car is mapped to a list of data to sync as each calendar to be
-  /// synced can have a unique start/end time.
-  private var dataToSync: [Car: [SyncData]] = [:]
-
-  public override var featureID: UUID {
-    return Self.featureUUID
-  }
-
-  @available(*, unavailable)
-  public override init(connectedCarManager: ConnectedCarManager) {
-    fatalError("Use `init(eventStore:connectedCarManager:)` instead.")
-  }
-
-  /// Initializes the CalendarSyncClient.
+/// The protocol for the `CalendarSyncClient`.
+public protocol CalendarSyncClient {
+  /// Synchronizes calendar events for the provided calendars starting from now over the client's
+  /// sync duration.
   ///
   /// - Parameters:
-  ///   - eventStore: The store for fetching user's calendar data.
-  ///   - connectedCarManager: The manager of cars connecting to the current device.
-  public init(eventStore: EKEventStore, connectedCarManager: ConnectedCarManager) {
-    self.eventStore = eventStore
-    super.init(connectedCarManager: connectedCarManager)
-  }
+  ///   - calendars: Identifiers of the calendars to sync.
+  ///   - carID: The identifier of the car.
+  func sync(calendars: some Collection<String>, withCar carID: String) throws
 
-  /// Synchronizes calendar events for the provided calendars that are in the given time frame over
-  /// to the specified car.
-  ///
-  /// If `carId` is `nil` calendar events will be synchronized to all cars the client has a
-  /// `SecureCarChannel` established with or establishing a `SecureCarChannel` to.
+  /// Synchronizes calendar events for the provided calendars over the client's sync duration.
   ///
   /// - Parameters:
-  ///   - calendars: List of `EKCalendar` of which events should be sent.
-  ///   - carId: The identifier of the car or `nil` to sync all all connected cars.
-  ///   - startDate: The start date of the range of events fetched.
-  ///   - endDate: The end date of the range of events fetched.
-  public func sync(
-    calendars: [EKCalendar], forCarId carId: String?, withStart startDate: Date,
-    end endDate: Date
-  ) {
-    guard calendars.count > 0 else {
-      Self.log.error("No calendars provided.")
-      return
-    }
+  ///   - calendars: Identifiers of the calendars to sync.
+  ///   - carID: The identifier of the car.
+  ///   - start: The time beginning which events are synched.
+  func sync(calendars: some Collection<String>, withCar carID: String, from start: Date) throws
 
-    guard startDate < endDate else {
-      Self.log.error("startDate is after endDate.")
-      return
-    }
+  /// Un-synchronizes calendars with the provided identifiers with the specified car.
+  ///
+  /// - Parameters:
+  ///   - calendars: Filter of the calendars to unsync.
+  ///   - carID: The identifier of the car.
+  func unsync(calendars: some Collection<String>, withCar carID: String) throws
+}
 
-    // Either sync the car specified or all connected cars.
-    let carsToSync = carId != nil ? [Car(id: carId!, name: nil)] : securedCars
+extension CalendarSyncClient {
+  /// Implementation synching events starting from now.
+  public func sync(calendars: some Collection<String>, withCar carID: String) throws {
+    try sync(calendars: calendars, withCar: carID, from: Date())
+  }
+}
 
-    for car in carsToSync {
-      let syncData = SyncData(calendars: calendars, startDate: startDate, endDate: endDate)
+/// Period over which to filter calendar events to sync.
+public enum CalendarSyncDuration {
+  /// Number of days to sync.
+  case days(Int)
 
-      // Save the calendar data so that a sync occurs if the car reconnects.
-      if let existingSyncData = dataToSync[car] {
-        dataToSync[car] = mergeSyncData(syncData, into: existingSyncData)
-      } else {
-        dataToSync[car] = [syncData]
-      }
-
-      do {
-        try send(calendars: calendars, withStart: startDate, end: endDate, to: car)
-      } catch {
-        Self.log.error(
-          "Encountered error syncing calendars to car \(car.name ?? car.id)," +
-          " \(error.localizedDescription)"
+  func makeTimeRange(from start: Date = Date()) throws -> Range<Date> {
+    switch self {
+    case .days(let numberOfDays):
+      guard
+        let end = Foundation.Calendar.current.date(
+          byAdding: DateComponents(day: numberOfDays),
+          to: start
         )
+      else {
+        throw Error.malformedEndDate
       }
+      guard end > start else { throw Error.invalidRange }
+      return start..<end
     }
-  }
-
-  /// Merges the given `syncData` into the given list of `SyncData`s.
-  ///
-  /// The `syncData` is either merged into one of the `SyncData`s in the list if it has the
-  /// same start/end time as one of them, or it is appended to the end of list if it does not.
-  ///
-  /// - Returns: A  list containing the merging of the given `syncData`.
-  private func mergeSyncData(_ syncData: SyncData, into syncDatas: [SyncData]) -> [SyncData] {
-    for existingSyncData in syncDatas {
-      if existingSyncData.hasSameTimeInterval(as: syncData) {
-        existingSyncData.mergeCalendars(from: syncData)
-        return syncDatas
-      }
-    }
-
-    // Returning a new list since `syncDatas` is a `let` constant due to it being an argument.
-    return syncDatas + [syncData]
-  }
-
-  /// Un-synchronizes calendars with the provided identifiers from the specified car.
-  ///
-  /// If `carId` is `nil`, calendar will be un-synchronized from all cars the client has a
-  /// `SecureCarChannel` established with.
-  ///
-  /// `EKCalendar` provides a unique identifier through the `calendarIdentifier` instance property,
-  /// which should be used here.
-  ///
-  /// - Parameters:
-  ///   - calendarIdentifiers: A list of unique calendar identifiers.
-  ///   - carId: The identifier of the car or `nil` to unsync calendars from all connected cars.
-  public func unsync(calendarIdentifiers: [String], forCarId carId: String?) {
-    guard calendarIdentifiers.count > 0 else {
-      Self.log.error("No calendar identifiers provided.")
-      return
-    }
-
-    // Send as little as possible information to the IHU. To unsync only the unique identifiers of
-    // the calendars are required.
-    var calendarsProto = Aae_Calendarsync_Calendars()
-    calendarsProto.calendar.append(
-      contentsOf: calendarIdentifiers.map { (element) -> Aae_Calendarsync_Calendar in
-        var calendar = Aae_Calendarsync_Calendar()
-        calendar.uuid = element
-        return calendar
-      })
-
-    // Only unsynchronize connected cars. Without a connection there can't be synchronized
-    // calendars. On disconnect, calendars are automatically deleted on the IHU.
-    let carsToUnsync = carId != nil ? [Car(id: carId!, name: nil)] : securedCars
-
-    for car in carsToUnsync {
-      // Remove matching calendars so they will not be synced later.
-      dataToSync[car] = dataToSync[car]?.filter { syncData in
-        syncData.removeAllCalendars(withIdentifiers: calendarIdentifiers)
-        // Completely remove the `SyncData` object if there are no more calendars to sync.
-        return !syncData.calendars.isEmpty
-      }
-
-      guard isCarSecurelyConnected(car) else {
-        Self.log(
-          "Request to unsync calendars from unconnected car \(car.name ?? car.id). Ignoring.")
-        continue
-      }
-
-      do {
-        let data = try calendarsProto.serializedData()
-        try sendMessage(data, to: car)
-      } catch {
-        Self.log.error("Failed to unsync calendars. Error: \(error)")
-      }
-    }
-  }
-
-  // MARK: - Event methods
-
-  public override func onSecureChannelEstablished(for car: Car) {
-    guard let syncDatas = dataToSync[car] else {
-      Self.log.debug(
-        "Car \(car.name ?? car.id) connected, but no stored calendar sync for that car. Ignoring.")
-      return
-    }
-
-    Self.log(
-      "Secure channel established for car \(car.name ?? car.id). Syncing stored calendar data.")
-
-    do {
-      for syncData in syncDatas {
-        try send(
-          calendars: syncData.calendars,
-          withStart: syncData.startDate,
-          end: syncData.endDate,
-          to: car)
-      }
-    } catch {
-      Self.log.error(
-        "Encountered an error sending message to car \(car.name ?? car.id):" +
-        "\(error.localizedDescription)")
-    }
-  }
-
-  public override func onCarDisassociated(_ car: Car) {
-    dataToSync[car] = nil
-  }
-
-  /// Sends calendar events for the provided calendars that are in the given time frame over the
-  /// provided channel.
-  private func send(
-    calendars: [EKCalendar],
-    withStart startDate: Date,
-    end endDate: Date,
-    to car: Car
-  ) throws {
-    guard isCarSecurelyConnected(car) else {
-      Self.log(
-        "Request to sync to car \(car.name ?? car.id), but not currently connected. Will sync " +
-        "when it is.")
-      return
-    }
-
-    let eventsList = try eventStore.events(for: calendars, withStart: startDate, end: endDate)
-    guard eventsList.count > 0 else {
-      Self.log.debug("No events to send.")
-      return
-    }
-
-    let protoEvents = EventsExporter.proto(from: eventsList)
-    let data = try protoEvents.serializedData()
-
-    try sendMessage(data, to: car)
   }
 }
 
-extension EKEventStore {
-  /// Retrieves all events for the provided calendars that are within the provided date range.
-  ///
-  /// Checks the `EKAuthorizationStatus` before events are retrieved and throws an error if
-  /// calendar access is not granted.
-  ///
-  /// - Parameters:
-  ///   - calendars: List of `EKCalendar` of which events should be sent.
-  ///   - startDate: The start date of the range of events fetched.
-  ///   - endDate: The end date of the range of events fetched.
-  /// - Returns: A list of matching `CalendarEvent` objects.
-  /// - Throws: `CalendarSyncClientError` if permission to access calendar data is not given.
-  fileprivate func events(for calendars: [EKCalendar], withStart startDate: Date, end endDate: Date)
-    throws
-    -> [CalendarEvent]
-  {
-    let authorizationStatus = Self.authorizationStatus(for: .event)
-    guard authorizationStatus == .authorized else {
-      throw CalendarSyncClient.CalendarSyncClientError.notAuthorized
-    }
+extension CalendarSyncDuration {
+  public enum Error: Swift.Error {
+    /// The constructed end date for the sync range is malformed.
+    case malformedEndDate
 
-    let predicate = predicateForEvents(
-      withStart: startDate, end: endDate, calendars: calendars)
-    return events(matching: predicate).map { EKEventWrapper(event: $0) }
-  }
-}
-
-/// Encapsulates all the data required to sync a list of calendars to a car.
-// Note: using a class instead of `struct` to make mutating functions easier to manage when
-// syncing and unsyncing calendar data. If concurrency becomes an issue, might need to switch
-// this to a struct.
-private class SyncData {
-  private(set) var calendars: [EKCalendar]
-  let startDate: Date
-  let endDate: Date
-
-  init(calendars: [EKCalendar], startDate: Date, endDate: Date) {
-    self.calendars = calendars
-    self.startDate = startDate
-    self.endDate = endDate
-  }
-
-  /// Returns `true` if this `SyncData` has the same start and end date as the specified
-  /// `syncData`.
-  func hasSameTimeInterval(as syncData: SyncData) -> Bool {
-    return startDate == syncData.startDate && endDate == syncData.endDate
-  }
-
-  /// Takes the calendars from the given `syncData` and merges them with the calendars in this
-  /// `SyncData`.
-  ///
-  /// Any duplicate entries will be consolidated. The ordering of the calendars is not preserved
-  /// after this merge.
-  func mergeCalendars(from syncData: SyncData) {
-    // Using a `Set` to remove any possible duplicates.
-    calendars = Array(Set(calendars + syncData.calendars))
-  }
-
-  /// Removes any calendars whose identifier is contained within the list of identifiers.
-  func removeAllCalendars(withIdentifiers identifiers: [String]) {
-    // The lists of calendars are usually small (< 10), so this `contains` should be
-    // negligible. If the calendar list grows, using a Set should be considered.
-    calendars.removeAll(where: { identifiers.contains($0.calendarIdentifier) })
+    /// End date must be strictly greater than start date.
+    case invalidRange
   }
 }

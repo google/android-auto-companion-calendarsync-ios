@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// Placeholder for CalendarSync Protos.
-///
-/// This file needs to be here to trigger the build for the `AndroidAutoCalendarSyncProtos` module
-/// from the corresponding Swift Package Manager target. A plugin will generate the source files for
-/// each proto file in this directory, but there has to be at least one Swift file (this
-/// placeholder) in this directory to trigger the build rules.
+import Foundation
+
+enum CalendarSyncClientConstants {
+  static let featureUUID = UUID(uuidString: "5a1a16fd-1ebd-4dbe-bfa7-37e40de0fd80")!
+}

@@ -12,25 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import EventKit
+@_implementationOnly import AndroidAutoCalendarSyncProtos
 
-/// The protocol of a calendar event.
-public protocol CalendarEvent: CalendarItem {
-  /// A unique identifier for the event.
-  var eventIdentifier: String! { get }
+typealias CalendarProto = Aae_Calendarsync_Calendar
 
-  /// The start date of the event.
-  var startDate: Date! { get }
-
-  /// The end date of the event.
-  var endDate: Date! { get }
-
-  /// A Boolean value that indicates whether the event is an all-day event.
-  var isAllDay: Bool { get }
-
-  /// The organizer associated with the event.
-  var organizer: Participant? { get }
-
-  /// The status of the event.
-  var status: EKEventStatus { get }
+extension CalendarProto {
+  init(_ calendar: some AndroidAutoCalendarSync.Calendar) {
+    self.init()
+    title = calendar.title
+    key = calendar.calendarIdentifier
+    color = ColorProto(calendar.cgColor)
+  }
 }

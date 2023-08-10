@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Foundation
 import XCTest
-import AndroidAutoCalendarSyncProtos
+@_implementationOnly import AndroidAutoCalendarSyncProtos
 
-@testable import AndroidAutoCalendarExporter
+@testable import AndroidAutoCalendarSync
 
 class CommonExporterTest: XCTestCase {
 
@@ -28,10 +29,10 @@ class CommonExporterTest: XCTestCase {
     let secondsPerDay: Int64 = 24 * 60 * 60
 
     let dateJan2 = createDateComponents(day: 2, month: 1, year: 1970).date!
-    XCTAssertEqual(secondsPerDay, CommonExporter.proto(from: dateJan2).seconds)
+    XCTAssertEqual(secondsPerDay, TimestampProto(dateJan2).seconds)
 
     let dateJan3 = createDateComponents(day: 3, month: 1, year: 1970).date!
-    XCTAssertEqual(2 * secondsPerDay, CommonExporter.proto(from: dateJan3).seconds)
+    XCTAssertEqual(2 * secondsPerDay, TimestampProto(dateJan3).seconds)
   }
 
   func testProtoFromTimeZone() {
@@ -39,27 +40,26 @@ class CommonExporterTest: XCTestCase {
 
     var expectedProto = Aae_Calendarsync_TimeZone()
     expectedProto.name = timeZoneBerlin.identifier
-    expectedProto.secondsFromGmt = Int64(timeZoneBerlin.secondsFromGMT())
 
-    XCTAssertEqual(expectedProto, CommonExporter.proto(from: timeZoneBerlin))
+    XCTAssertEqual(expectedProto, TimeZoneProto(timeZoneBerlin))
   }
 
   func testProtoFromCGColor() {
-    XCTAssertEqual(255 << 24, CommonExporter.proto(from: UIColor.black.cgColor).argb)
-    XCTAssertEqual(255 << 24 | 255, CommonExporter.proto(from: UIColor.blue.cgColor).argb)
-    XCTAssertEqual(255 << 24 | 255 << 8, CommonExporter.proto(from: UIColor.green.cgColor).argb)
-    XCTAssertEqual(255 << 24 | 255 << 16, CommonExporter.proto(from: UIColor.red.cgColor).argb)
+    XCTAssertEqual(255 << 24, ColorProto(UIColor.black).argb)
+    XCTAssertEqual(255 << 24 | 255, ColorProto(UIColor.blue).argb)
+    XCTAssertEqual(255 << 24 | 255 << 8, ColorProto(UIColor.green).argb)
+    XCTAssertEqual(255 << 24 | 255 << 16, ColorProto(UIColor.red).argb)
 
-    let color = UIColor(red: 0.1, green: 0.2, blue: 0.3, alpha: 0.5).cgColor
+    let color = UIColor(red: 0.1, green: 0.2, blue: 0.3, alpha: 0.5)
     let expectedArgb =
       Int32(0.5 * 255) << 24 | Int32(0.1 * 255) << 16 | Int32(0.2 * 255) << 8
       | Int32(0.3 * 255)
-    XCTAssertEqual(expectedArgb, CommonExporter.proto(from: color).argb)
+    XCTAssertEqual(expectedArgb, ColorProto(color).argb)
   }
 
   private func createDateComponents(day: Int, month: Int, year: Int) -> DateComponents {
     var dateComponents = DateComponents()
-    dateComponents.calendar = Calendar.current
+    dateComponents.calendar = Foundation.Calendar.current
     dateComponents.timeZone = TimeZone(identifier: "Etc/GMT")
     dateComponents.day = day
     dateComponents.month = month

@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoEventKitProtocolMocks
-import UIKit
 import XCTest
-import AndroidAutoCalendarSyncProtos
+@_implementationOnly import AndroidAutoCalendarSyncProtos
 
-@testable import AndroidAutoCalendarExporter
+@testable import AndroidAutoCalendarSync
 
-class CalendarItemExporterTest: XCTestCase {
-
+class CalendarEventProtoTest: XCTestCase {
   let mockCalendar = MockCalendar(title: "My Calendar", calendarIdentifier: "id")
+  let date1 = Date(timeIntervalSince1970: 1.0)
+  let date2 = Date(timeIntervalSince1970: 42.0)
+  let timeZone = TimeZone(identifier: "Europe/Berlin")!
 
   override func setUp() {
     super.setUp()
@@ -35,9 +35,9 @@ class CalendarItemExporterTest: XCTestCase {
 
     var calendarItem = MockCalendarItem(calendar: mockCalendar, title: "Test Event Title")
 
-    var expectedProto = Aae_Calendarsync_Event()
+    var expectedProto = CalendarEventProto()
     expectedProto.title = "Test Event Title"
-    XCTAssertEqual(expectedProto, CalendarItemExporter.proto(from: calendarItem))
+    XCTAssertEqual(expectedProto, CalendarEventProto(item: calendarItem))
 
     calendarItem = MockCalendarItem(
       calendar: mockCalendar,
@@ -49,15 +49,37 @@ class CalendarItemExporterTest: XCTestCase {
       notes: "It's really a crazy one.",
       attendees: nil)
 
-    expectedProto = Aae_Calendarsync_Event()
+    expectedProto = CalendarEventProto()
     expectedProto.title = "The crazy ones"
     expectedProto.location = "far far away"
-    expectedProto.creationDate = CommonExporter.proto(from: creationDate)
-    expectedProto.lastModifiedDate = CommonExporter.proto(from: lastModifiedDate)
-    expectedProto.timeZone = CommonExporter.proto(from: timeZone)
+    expectedProto.timeZone = TimeZoneProto(timeZone)
     expectedProto.description_p = "It's really a crazy one."
 
-    XCTAssertEqual(expectedProto, CalendarItemExporter.proto(from: calendarItem))
+    XCTAssertEqual(expectedProto, CalendarEventProto(item: calendarItem))
+  }
+
+  func testProtoFromEvent() {
+    let event = MockCalendarEvent(
+      eventID: "id",
+      startDate: date1,
+      endDate: date2,
+      isAllDay: true,
+      status: .confirmed,
+      calendar: mockCalendar,
+      title: "event",
+      timeZone: timeZone
+    )
+
+    var expectedProto = CalendarEventProto()
+    expectedProto.key = "id"
+    expectedProto.title = "event"
+    expectedProto.beginTime = TimestampProto(event.startDate)
+    expectedProto.endTime = TimestampProto(event.endDate)
+    expectedProto.timeZone = TimeZoneProto(timeZone)
+    expectedProto.isAllDay = event.isAllDay
+    expectedProto.status = CalendarEventProto.Status(event.eventStatus)
+
+    XCTAssertEqual(expectedProto, CalendarEventProto(event))
   }
 
   func testProtoFromCalendarItemWithParticipants() {
@@ -74,10 +96,10 @@ class CalendarItemExporterTest: XCTestCase {
       notes: nil,
       attendees: [participantA, participantB])
 
-    var expectedProto = Aae_Calendarsync_Event()
+    var expectedProto = CalendarEventProto()
     expectedProto.title = "Yet another event"
-    expectedProto.attendee = ParticipantExporter.proto(from: [participantA, participantB])
+    expectedProto.attendees = AttendeeProto.makeAttendees([participantA, participantB])
 
-    XCTAssertEqual(expectedProto, CalendarItemExporter.proto(from: calendarItem))
+    XCTAssertEqual(expectedProto, CalendarEventProto(item: calendarItem))
   }
 }

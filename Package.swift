@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.8
 
 // Copyright 2021 Google LLC
 //
@@ -27,58 +27,31 @@ let package = Package(
       targets: ["AndroidAutoCalendarSync"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/google/android-auto-companion-ios.git", from: "3.0.1"),
+    .package(url: "https://github.com/google/android-auto-companion-ios.git", from: "3.1.0"),
     .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.20.0"),
   ],
   targets: [
     .target(
-      name: "AndroidAutoEventKitProtocol",
-      dependencies: []),
-    .target(
-      name: "AndroidAutoEventKitProtocolMocks",
-      dependencies: ["AndroidAutoEventKitProtocol"]),
-    .target(
-      name: "AndroidAutoEventKit",
-      dependencies: ["AndroidAutoEventKitProtocol"]),
-    .target(
-      name: "AndroidAutoCalendarExporter",
-      dependencies: [
-        "AndroidAutoEventKitProtocol",
-        "AndroidAutoCalendarSyncProtos",
-      ]),
-    .target(
       name: "AndroidAutoCalendarSync",
       dependencies: [
-        "AndroidAutoCalendarExporter",
         "AndroidAutoCalendarSyncProtos",
-        "AndroidAutoEventKit",
-        "AndroidAutoEventKitProtocol",
         .product(name: "AndroidAutoConnectedDeviceManager", package: "android-auto-companion-ios"),
         .product(name: "AndroidAutoLogger", package: "android-auto-companion-ios"),
       ]),
-    .target(
-      name: "AndroidAutoCalendarSyncMocks",
-      dependencies: []),
     .target(
       name: "AndroidAutoCalendarSyncProtos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
       plugins: [.plugin(name: "ProtoSourceGenerator", package: "android-auto-companion-ios")]
     ),
     .testTarget(
-      name: "AndroidAutoCalendarExporterTests",
-      dependencies: [
-        "AndroidAutoCalendarExporter",
-        "AndroidAutoEventKitProtocolMocks",
-      ]),
-    .testTarget(
       name: "AndroidAutoCalendarSyncTests",
       dependencies: [
         "AndroidAutoCalendarSync",
-        "AndroidAutoCalendarSyncMocks",
         .product(
           name: "AndroidAutoConnectedDeviceManagerMocks",
           package: "android-auto-companion-ios"
         ),
+        .product(name: "AndroidAutoLogger", package: "android-auto-companion-ios"),
       ]),
   ]
 )

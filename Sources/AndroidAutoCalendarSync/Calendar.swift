@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// Placeholder for CalendarSync Protos.
-///
-/// This file needs to be here to trigger the build for the `AndroidAutoCalendarSyncProtos` module
-/// from the corresponding Swift Package Manager target. A plugin will generate the source files for
-/// each proto file in this directory, but there has to be at least one Swift file (this
-/// placeholder) in this directory to trigger the build rules.
+import UIKit
+
+/// The protocol of a calendar object.
+public protocol Calendar: Hashable, Equatable {
+  /// The calendar's title.
+  var title: String { get }
+
+  /// A unique identifier for the calendar.
+  var calendarIdentifier: String { get }
+
+  /// The calendar's color.
+  var cgColor: CGColor! { get }
+}

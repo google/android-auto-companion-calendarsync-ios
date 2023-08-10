@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoEventKitProtocol
+import AndroidAutoCalendarSync
 import Foundation
 
 /// A mock calendar item.
-public struct MockCalendarItem: CalendarItem {
-  public var calendar: ProtocolCalendar!
-  public var title: String!
-  public var location: String?
-  public var creationDate: Date?
-  public var lastModifiedDate: Date?
-  public var timeZone: TimeZone?
-  public var notes: String?
-  public var attendees: [Participant]?
+struct MockCalendarItem: CalendarItem {
+  var calendar: MockCalendar!
+  var title: String!
+  var location: String?
+  var creationDate: Date?
+  var lastModifiedDate: Date?
+  var timeZone: TimeZone?
+  var notes: String?
+  var attendees: [MockParticipant]?
 
-  public init(
-    calendar: ProtocolCalendar!, title: String!, location: String? = nil, creationDate: Date? = nil,
+  init(
+    calendar: MockCalendar!, title: String!, location: String? = nil, creationDate: Date? = nil,
     lastModifiedDate: Date? = nil, timeZone: TimeZone? = nil, notes: String? = nil,
-    attendees: [Participant]? = nil
+    attendees: [MockParticipant]? = nil
   ) {
     self.calendar = calendar
     self.title = title

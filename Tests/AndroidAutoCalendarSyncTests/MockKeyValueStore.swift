@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import UIKit
+import AndroidAutoCalendarSync
+import Foundation
 
-/// The protocol of a calendar object.
-public protocol Calendar {
-  /// The calendar's title.
-  var title: String { get }
+/// A mock key-value store.
+class MockKeyValueStore: KeyValueStore {
+  private var storage: [String: Any] = [:]
 
-  /// A unique identifier for the calendar.
-  var calendarIdentifier: String { get }
+  func object(forKey key: String) -> Any? { storage[key] }
 
-  /// The calendar's color.
-  var cgColor: CGColor! { get }
+  func set(_ value: Any?, forKey key: String) { storage[key] = value }
+
+  func clear() { storage = [:] }
 }

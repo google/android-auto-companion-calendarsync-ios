@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoEventKitProtocol
+import AndroidAutoCalendarSync
 import UIKit
 
-public typealias ProtocolCalendar = AndroidAutoEventKitProtocol.Calendar
+public typealias Calendar = AndroidAutoCalendarSync.Calendar
 
 /// A mock calendar.
-public struct MockCalendar: ProtocolCalendar {
-  public var title: String
-  public var calendarIdentifier: String
-  public var cgColor: CGColor!
+struct MockCalendar: Calendar {
+  var title: String
+  var calendarIdentifier: String
+  var cgColor: CGColor!
 
-  public init(title: String, calendarIdentifier: String, cgColor: CGColor!) {
+  init(title: String, calendarIdentifier: String, cgColor: CGColor) {
     self.title = title
     self.calendarIdentifier = calendarIdentifier
     self.cgColor = cgColor
   }
 
-  public init(title: String, calendarIdentifier: String) {
+  init(title: String, calendarIdentifier: String) {
     self.init(title: title, calendarIdentifier: calendarIdentifier, cgColor: UIColor.blue.cgColor)
   }
 }
