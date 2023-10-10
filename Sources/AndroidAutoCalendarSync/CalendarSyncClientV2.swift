@@ -170,7 +170,7 @@ final class CalendarSyncClientV2<Store: EventStore, SettingsStore: KeyValueStore
 
     let events = try fetchEvents(in: calendars, over: timeRange)
 
-    Self.log("Start exporting the \(events.count) events.")
+    Self.log("Send \(events.count) events over \(calendars.count) calendars.")
     let protoEvents = UpdateCalendarsProto(events: events, in: calendars)
     let data = try protoEvents.serializedData()
 
@@ -215,7 +215,8 @@ extension CalendarSyncClientV2: CalendarSyncClient {
     let syncTimeRange = try syncDuration.makeTimeRange(from: start)
     Self.log(
       """
-      Sync calendars with car from: \(syncTimeRange.lowerBound) to \(syncTimeRange.upperBound).
+      Sync \(calendarIdentifiers.count) calendars with car from: \(syncTimeRange.lowerBound) to \
+      \(syncTimeRange.upperBound).
       """
     )
 
@@ -234,8 +235,8 @@ extension CalendarSyncClientV2: CalendarSyncClient {
     calendars calendarIdentifiers: some Collection<String>,
     withCar carID: String
   ) throws {
-    guard calendarIdentifiers.count > 0 else {
-      Self.log.error("No calendar identifiers provided.")
+    guard !calendarIdentifiers.isEmpty else {
+      Self.log.error("No calendar identifiers provided to unsync.")
       return
     }
 
