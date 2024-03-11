@@ -19,12 +19,12 @@ import PackageDescription
 let package = Package(
   name: "AndroidAutoCalendarSync",
   platforms: [
-    .iOS(.v13)
+    .iOS(.v15)
   ],
   products: [
     .library(
       name: "AndroidAutoCalendarSync",
-      targets: ["AndroidAutoCalendarSync"]),
+      targets: ["AndroidAutoCalendarSync"])
   ],
   dependencies: [
     .package(url: "https://github.com/google/android-auto-companion-ios.git", from: "3.1.0"),
