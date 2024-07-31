@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+internal import AndroidAutoCalendarSyncProtos
 
 typealias CalendarProto = Aae_Calendarsync_Calendar
 

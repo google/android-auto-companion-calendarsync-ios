@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCalendarSync
-import UIKit
+internal import AndroidAutoCalendarSync
+internal import UIKit
 
 class MockEventStore {
   /// Calendars keyed by identifier.

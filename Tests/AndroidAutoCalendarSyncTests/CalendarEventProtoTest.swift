@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import XCTest
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+internal import XCTest
+private import AndroidAutoCalendarSyncProtos
 
-@testable import AndroidAutoCalendarSync
+@testable private import AndroidAutoCalendarSync
 
 class CalendarEventProtoTest: XCTestCase {
   let mockCalendar = MockCalendar(title: "My Calendar", calendarIdentifier: "id")

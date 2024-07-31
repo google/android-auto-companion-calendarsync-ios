@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import EventKit
-import Foundation
-import UIKit
-import XCTest
+private import EventKit
+private import Foundation
+private import UIKit
+internal import XCTest
 
-@testable import AndroidAutoCalendarSync
+@testable private import AndroidAutoCalendarSync
 
 /// Test EventKit integration with Calendar Sync.
 class EventKitTest: XCTestCase {
-  var eventStore: EKEventStore! = nil
+  private var eventStore: EKEventStore! = nil
 
   override func setUp() {
     super.setUp()

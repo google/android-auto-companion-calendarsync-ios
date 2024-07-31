@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManager
-import XCTest
+private import AndroidAutoConnectedDeviceManager
+internal import XCTest
 
-@testable import AndroidAutoCalendarSync
+@testable private import AndroidAutoCalendarSync
 
 let store = MockKeyValueStore()
 

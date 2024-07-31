@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManager
-import AndroidAutoLogger
-import Foundation
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+internal import AndroidAutoConnectedDeviceManager
+private import AndroidAutoLogger
+internal import AndroidAutoUtils
+internal import Foundation
+internal import AndroidAutoCalendarSyncProtos
 
 /// Client for the calendar sync companion feature.
 ///
 /// This version syncs the calendars upon connection, configuration and when the local calendar
 /// events are modified.
-final class CalendarSyncClientV2<Store: EventStore, SettingsStore: KeyValueStore>: FeatureManager {
+final class CalendarSyncClientV2<Store: EventStore, SettingsStore: PropertyListStore>:
+  FeatureManager
+{
   private static var log: Logger {
     Logger(for: CalendarSyncClientV2.self)
   }
@@ -40,7 +43,7 @@ final class CalendarSyncClientV2<Store: EventStore, SettingsStore: KeyValueStore
   }
 
   @available(*, unavailable)
-  public override init(connectedCarManager: ConnectedCarManager) {
+  override init(connectedCarManager: ConnectedCarManager) {
     fatalError("Use `init(eventStore:connectedCarManager:)` instead.")
   }
 
@@ -50,7 +53,7 @@ final class CalendarSyncClientV2<Store: EventStore, SettingsStore: KeyValueStore
   ///   - eventStore: The store for fetching user's calendar data.
   ///   - settings: The UserDefaults settings that stores the feature status.
   ///   - connectedCarManager: The manager of cars connecting to the current device.
-  public init(
+  init(
     eventStore: Store,
     settings: CarCalendarSettings<SettingsStore>,
     connectedCarManager: ConnectedCarManager,
@@ -202,7 +205,7 @@ extension CalendarSyncClientV2: CalendarSyncClient {
   ///   - calendarIdentifiers: A list of unique calendar identifiers.
   ///   - carID: The identifier of the car with which to sync.
   ///   - start: Time from which to begin filtering events to sync.
-  public func sync(
+  func sync(
     calendars calendarIdentifiers: some Collection<String>,
     withCar carID: String,
     from start: Date
@@ -231,7 +234,7 @@ extension CalendarSyncClientV2: CalendarSyncClient {
   /// - Parameters:
   ///   - calendarIdentifiers: A list of unique calendar identifiers.
   ///   - carID: The identifier of the car to unsync calendars.
-  public func unsync(
+  func unsync(
     calendars calendarIdentifiers: some Collection<String>,
     withCar carID: String
   ) throws {

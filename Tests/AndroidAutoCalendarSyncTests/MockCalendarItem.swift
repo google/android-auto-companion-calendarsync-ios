@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCalendarSync
-import Foundation
+internal import AndroidAutoCalendarSync
+internal import Foundation
 
 /// A mock calendar item.
 struct MockCalendarItem: CalendarItem {

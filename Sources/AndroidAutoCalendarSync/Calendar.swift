@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import UIKit
+public import UIKit
 
 /// The protocol of a calendar object.
 public protocol Calendar: Hashable, Equatable {

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+internal import Foundation
+internal import AndroidAutoCalendarSyncProtos
 
 typealias CalendarEventProto = Aae_Calendarsync_Event
 

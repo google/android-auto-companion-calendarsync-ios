@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import EventKit
-import Foundation
+public import EventKit
+public import Foundation
 
 // MARK: - EKEvent conformance to CalendarEvent
 extension EKEvent: CalendarEvent {

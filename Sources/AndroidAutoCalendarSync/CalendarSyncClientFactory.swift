@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoConnectedDeviceManager
-import EventKit
-import Foundation
+public import AndroidAutoConnectedDeviceManager
+public import AndroidAutoUtils
+public import EventKit
+internal import Foundation
 
 /// Factory for making calendar sync clients.
 @MainActor
@@ -31,7 +32,7 @@ public enum CalendarSyncClientFactory {
   ///   - syncDuration: The period of calendar events to sync.
   /// - Returns: The created client.
   public func makeClient(
-    settings: CarCalendarSettings<UserDefaults>,
+    settings: CarCalendarSettings<UserDefaultsPropertyListStore>,
     eventStore: EKEventStore,
     connectedCarManager connectionManager: ConnectedCarManager,
     syncDuration: CalendarSyncDuration

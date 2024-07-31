@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:5.10
 
 // Copyright 2021 Google LLC
 //
@@ -27,7 +27,7 @@ let package = Package(
       targets: ["AndroidAutoCalendarSync"])
   ],
   dependencies: [
-    .package(url: "https://github.com/google/android-auto-companion-ios.git", from: "4.0.0"),
+    .package(url: "https://github.com/google/android-auto-companion-ios.git", from: "4.2.0"),
     .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.20.0"),
   ],
   targets: [
@@ -37,10 +37,20 @@ let package = Package(
         "AndroidAutoCalendarSyncProtos",
         .product(name: "AndroidAutoConnectedDeviceManager", package: "android-auto-companion-ios"),
         .product(name: "AndroidAutoLogger", package: "android-auto-companion-ios"),
-      ]),
+        .product(name: "AndroidAutoUtils", package: "android-auto-companion-ios"),
+      ],
+      swiftSettings: [
+        .enableExperimentalFeature("AccessLevelOnImport"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+      ]
+    ),
     .target(
       name: "AndroidAutoCalendarSyncProtos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
+      swiftSettings: [
+        .enableExperimentalFeature("AccessLevelOnImport"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+      ],
       plugins: [.plugin(name: "ProtoSourceGenerator", package: "android-auto-companion-ios")]
     ),
     .testTarget(
@@ -52,6 +62,12 @@ let package = Package(
           package: "android-auto-companion-ios"
         ),
         .product(name: "AndroidAutoLogger", package: "android-auto-companion-ios"),
-      ]),
+        .product(name: "AndroidAutoUtils", package: "android-auto-companion-ios"),
+      ],
+      swiftSettings: [
+        .enableExperimentalFeature("AccessLevelOnImport"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+      ]
+    ),
   ]
 )

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import UIKit
-import XCTest
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+private import Foundation
+private import UIKit
+internal import XCTest
+private import AndroidAutoCalendarSyncProtos
 
-@testable import AndroidAutoCalendarSync
+@testable private import AndroidAutoCalendarSync
 
 class CalendarProtoTest: XCTestCase {
   func testProtoFromCalendar() {

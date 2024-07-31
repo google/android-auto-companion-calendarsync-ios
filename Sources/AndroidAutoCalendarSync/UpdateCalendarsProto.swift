@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoLogger
-import Foundation
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+private import AndroidAutoLogger
+internal import Foundation
+internal import AndroidAutoCalendarSyncProtos
 
 typealias UpdateCalendarsProto = Aae_Calendarsync_UpdateCalendars
 

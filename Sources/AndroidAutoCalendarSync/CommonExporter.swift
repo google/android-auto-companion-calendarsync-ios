@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import UIKit
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+internal import Foundation
+internal import UIKit
+internal import AndroidAutoCalendarSyncProtos
 
 typealias TimestampProto = Aae_Calendarsync_Timestamp
 typealias TimeZoneProto = Aae_Calendarsync_TimeZone

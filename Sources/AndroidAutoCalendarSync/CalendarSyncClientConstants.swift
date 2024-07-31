@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+internal import Foundation
 
 enum CalendarSyncClientConstants {
   static let featureUUID = UUID(uuidString: "5a1a16fd-1ebd-4dbe-bfa7-37e40de0fd80")!

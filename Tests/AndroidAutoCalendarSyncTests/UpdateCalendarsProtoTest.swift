@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
-import UIKit
-import XCTest
-@_implementationOnly import AndroidAutoCalendarSyncProtos
+internal import Foundation
+internal import UIKit
+internal import XCTest
+private import AndroidAutoCalendarSyncProtos
 
-@testable import AndroidAutoCalendarSync
+@testable internal import AndroidAutoCalendarSync
 
 class UpdateCalendarsProtoTest: XCTestCase {
   let date1 = Date(timeIntervalSince1970: 1.0)

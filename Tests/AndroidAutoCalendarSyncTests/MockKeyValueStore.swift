@@ -12,16 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCalendarSync
-import Foundation
+internal import AndroidAutoCalendarSync
+internal import AndroidAutoUtils
+internal import Foundation
 
 /// A mock key-value store.
-class MockKeyValueStore: KeyValueStore {
+class MockKeyValueStore: PropertyListStore {
   private var storage: [String: Any] = [:]
 
-  func object(forKey key: String) -> Any? { storage[key] }
+  func clear() {
+    storage = [:]
+  }
 
-  func set(_ value: Any?, forKey key: String) { storage[key] = value }
+  /// Access and set primitive convertible values by key in the store.
+  subscript<T>(key: String) -> T? where T: PropertyListConvertible {
+    get {
+      guard let primitive = storage[key] as? T.Primitive else { return nil }
+      do {
+        return try T.init(primitive: primitive)
+      } catch {
+        print("Error instantiating \(T.self) from \(primitive): \(error.localizedDescription)")
+        return nil
+      }
+    }
 
-  func clear() { storage = [:] }
+    set {
+      storage[key] = newValue?.makePropertyListPrimitive()
+    }
+  }
+
+  func removeValue(forKey key: String) {
+    storage[key] = nil
+  }
 }

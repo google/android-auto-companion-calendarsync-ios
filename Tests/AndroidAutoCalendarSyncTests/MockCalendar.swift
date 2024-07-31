@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import AndroidAutoCalendarSync
-import UIKit
+internal import AndroidAutoCalendarSync
+internal import UIKit
 
-public typealias Calendar = AndroidAutoCalendarSync.Calendar
+typealias Calendar = AndroidAutoCalendarSync.Calendar
 
 /// A mock calendar.
 struct MockCalendar: Calendar {
