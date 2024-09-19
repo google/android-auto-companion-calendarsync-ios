@@ -19,7 +19,7 @@ import PackageDescription
 let package = Package(
   name: "AndroidAutoCalendarSync",
   platforms: [
-    .iOS(.v15)
+    .iOS(.v16)
   ],
   products: [
     .library(
@@ -27,7 +27,7 @@ let package = Package(
       targets: ["AndroidAutoCalendarSync"])
   ],
   dependencies: [
-    .package(url: "https://github.com/google/android-auto-companion-ios.git", from: "4.2.0"),
+    .package(url: "https://github.com/google/android-auto-companion-ios.git", from: "5.0.0"),
     .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.20.0"),
   ],
   targets: [
@@ -47,10 +47,6 @@ let package = Package(
     .target(
       name: "AndroidAutoCalendarSyncProtos",
       dependencies: [.product(name: "SwiftProtobuf", package: "swift-protobuf")],
-      swiftSettings: [
-        .enableExperimentalFeature("AccessLevelOnImport"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
-      ],
       plugins: [.plugin(name: "ProtoSourceGenerator", package: "android-auto-companion-ios")]
     ),
     .testTarget(

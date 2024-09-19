@@ -25,7 +25,7 @@ internal import AndroidAutoCalendarSyncProtos
 final class CalendarSyncClientV2<Store: EventStore, SettingsStore: PropertyListStore>:
   FeatureManager
 {
-  private static var log: Logger {
+  nonisolated private static var log: Logger {
     Logger(for: CalendarSyncClientV2.self)
   }
 
@@ -33,7 +33,7 @@ final class CalendarSyncClientV2<Store: EventStore, SettingsStore: PropertyListS
 
   private var settings: CarCalendarSettings<SettingsStore>
 
-  private var observer: NSObjectProtocol?
+  private var observer: NotificationDispatcher?
 
   /// Duration over which to sync the calendars.
   private let syncDuration: CalendarSyncDuration
@@ -71,7 +71,7 @@ final class CalendarSyncClientV2<Store: EventStore, SettingsStore: PropertyListS
 
   deinit {
     if let observer {
-      NotificationCenter.default.removeObserver(observer)
+      Task { @MainActor in observer.invalidate() }
     }
   }
 
@@ -79,12 +79,12 @@ final class CalendarSyncClientV2<Store: EventStore, SettingsStore: PropertyListS
   /// the securely connected cars with calendar feature ON.
   func startMonitoringCalendarUpdatesOnConnectedCars() {
     if let observer {
-      NotificationCenter.default.removeObserver(observer)
+      observer.invalidate()
     }
 
-    observer = NotificationCenter.default.addObserver(
-      forName: self.eventStore.observingEventName, object: self.eventStore, queue: .main
-    ) { [weak self] notification in
+    observer = NotificationDispatcher(
+      name: self.eventStore.observingEventName
+    ) { [weak self] in
       guard let self else { return }
 
       Self.log.info("Calendar events changed. Synching calendars with cars.")

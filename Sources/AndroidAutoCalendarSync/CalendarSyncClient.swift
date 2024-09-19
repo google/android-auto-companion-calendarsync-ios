@@ -16,7 +16,7 @@ internal import AndroidAutoConnectedDeviceManager
 public import Foundation
 
 /// The protocol for the `CalendarSyncClient`.
-public protocol CalendarSyncClient {
+@MainActor public protocol CalendarSyncClient {
   /// Synchronizes calendar events for the provided calendars starting from now over the client's
   /// sync duration.
   ///

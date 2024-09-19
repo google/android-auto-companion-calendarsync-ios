@@ -39,23 +39,17 @@ class CalendarSyncClientV2Test: XCTestCase {
   private var otherCalendar: MockCalendar!
   private var nowCalendar: MockCalendar!
 
-  @MainActor override func setUp() {
-    super.setUp()
+  override func setUp() async throws {
+    try await super.setUp()
     continueAfterFailure = false
 
-    eventStore = MockEventStore()
+    await setUpOnMain()
+  }
+
+  @MainActor private func setUpOnMain() {
     mockSettingsStore = MockKeyValueStore()
     settings = CarCalendarSettings(mockSettingsStore)
     mockConnectedCarManager = ConnectedCarManagerMock()
-
-    testClient = CalendarSyncClientV2(
-      eventStore: eventStore,
-      settings: settings,
-      connectedCarManager: mockConnectedCarManager,
-      syncDuration: .days(1)
-    )
-
-    populateCalendars()
   }
 
   override func tearDown() {
@@ -64,13 +58,12 @@ class CalendarSyncClientV2Test: XCTestCase {
     settings = nil
     mockSettingsStore = nil
     eventStore = nil
-    MockEventStore.isAuthorized = false
 
     super.tearDown()
   }
 
   @MainActor func testSendWithoutCalendarPermission() {
-    MockEventStore.isAuthorized = false
+    makeTestClient(isAuthorized: false)
 
     let mockChannel = SecuredCarChannelMock(id: "TestCar", name: nil)
     mockConnectedCarManager.triggerSecureChannelSetUp(with: mockChannel)
@@ -87,7 +80,7 @@ class CalendarSyncClientV2Test: XCTestCase {
   }
 
   @MainActor func testSend() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let mockChannel = SecuredCarChannelMock(id: "TestCar", name: nil)
     mockConnectedCarManager.triggerSecureChannelSetUp(with: mockChannel)
@@ -102,11 +95,11 @@ class CalendarSyncClientV2Test: XCTestCase {
 
     XCTAssertEqual(mockChannel.writtenMessages.count, 1)
     XCTAssertNoThrow(
-      try Aae_Calendarsync_UpdateCalendars(serializedData: mockChannel.writtenMessages.first!))
+      try Aae_Calendarsync_UpdateCalendars(serializedBytes: mockChannel.writtenMessages.first!))
   }
 
   @MainActor func testSend_ToSpecificCar() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let carID = "someCoolCarID"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Some cool car")
@@ -126,11 +119,11 @@ class CalendarSyncClientV2Test: XCTestCase {
     XCTAssert(mockChannelOtherCar.writtenMessages.isEmpty)
     XCTAssertEqual(mockChannel.writtenMessages.count, 1)
     XCTAssertNoThrow(
-      try Aae_Calendarsync_UpdateCalendars(serializedData: mockChannel.writtenMessages.first!))
+      try Aae_Calendarsync_UpdateCalendars(serializedBytes: mockChannel.writtenMessages.first!))
   }
 
   @MainActor func testSend_ToSpecificCar_withTwoDifferentCalendars() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let carID = "someCoolCarID"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Some cool car")
@@ -156,14 +149,14 @@ class CalendarSyncClientV2Test: XCTestCase {
     // Both calendars should be written since their start dates are different.
     XCTAssertEqual(mockChannel.writtenMessages.count, 2)
     XCTAssertNoThrow(
-      try Aae_Calendarsync_UpdateCalendars(serializedData: mockChannel.writtenMessages[0]))
+      try Aae_Calendarsync_UpdateCalendars(serializedBytes: mockChannel.writtenMessages[0]))
     XCTAssertNoThrow(
-      try Aae_Calendarsync_UpdateCalendars(serializedData: mockChannel.writtenMessages[1]))
+      try Aae_Calendarsync_UpdateCalendars(serializedBytes: mockChannel.writtenMessages[1]))
   }
 
   /// Two calendars are sent (one with no events in range and one with events in range).
   @MainActor func testSend_ToSpecificCar_twoCalendars_oneWithEventsInRange() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let carID = "someCoolCarID"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Some cool car")
@@ -191,17 +184,17 @@ class CalendarSyncClientV2Test: XCTestCase {
     // Both calendars should be sent including the empty one.
     XCTAssertEqual(mockChannel.writtenMessages.count, 2)
     XCTAssertNoThrow(
-      try Aae_Calendarsync_UpdateCalendars(serializedData: mockChannel.writtenMessages[0]))
+      try Aae_Calendarsync_UpdateCalendars(serializedBytes: mockChannel.writtenMessages[0]))
 
     let secondUpdate = try Aae_Calendarsync_UpdateCalendars(
-      serializedData: mockChannel.writtenMessages[1])
+      serializedBytes: mockChannel.writtenMessages[1])
     XCTAssertEqual(secondUpdate.calendars.count, 1)
     XCTAssertEqual(secondUpdate.calendars[0].key, otherCalendar.calendarIdentifier)
     XCTAssertTrue(secondUpdate.calendars[0].events.isEmpty)
   }
 
   @MainActor func testSyncCalendarsOnConnection() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let carID = "Test"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Test")
@@ -220,12 +213,12 @@ class CalendarSyncClientV2Test: XCTestCase {
 
     // The last update is for synching the calendars.
     let sync = try Aae_Calendarsync_UpdateCalendars(
-      serializedData: mockChannel.writtenMessages[0])
+      serializedBytes: mockChannel.writtenMessages[0])
     XCTAssertEqual(sync.calendars.count, 3)
   }
 
   @MainActor func testSend_toSpecificCarBeforeConnection_syncsAfterCarConnects() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let carID = "TestCar"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Some cool car")
@@ -237,11 +230,11 @@ class CalendarSyncClientV2Test: XCTestCase {
 
     XCTAssertEqual(mockChannel.writtenMessages.count, 1)
     XCTAssertNoThrow(
-      try Aae_Calendarsync_UpdateCalendars(serializedData: mockChannel.writtenMessages.first!))
+      try Aae_Calendarsync_UpdateCalendars(serializedBytes: mockChannel.writtenMessages.first!))
   }
 
   @MainActor func testSend_ToSpecificCar_syncsAfterReconnect() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let carID = "TestCar"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Some cool car")
@@ -268,11 +261,11 @@ class CalendarSyncClientV2Test: XCTestCase {
     XCTAssert(mockChannelOtherCar.writtenMessages.isEmpty)
     XCTAssertEqual(mockChannel.writtenMessages.count, 3)
     XCTAssertNoThrow(
-      try Aae_Calendarsync_UpdateCalendars(serializedData: mockChannel.writtenMessages[1]))
+      try Aae_Calendarsync_UpdateCalendars(serializedBytes: mockChannel.writtenMessages[1]))
   }
 
   @MainActor func testSendCalendarWithNoEventsInRange() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let carID = "TestCar"
     let mockChannel = SecuredCarChannelMock(id: carID, name: nil)
@@ -294,7 +287,7 @@ class CalendarSyncClientV2Test: XCTestCase {
   }
 
   @MainActor func testSendCalendars_EventsInRangeAndEmptyCalendar() throws {
-    MockEventStore.isAuthorized = true
+    makeTestClient(isAuthorized: true)
 
     let carID = "TestCar"
     let mockChannel = SecuredCarChannelMock(id: carID, name: nil)
@@ -317,7 +310,7 @@ class CalendarSyncClientV2Test: XCTestCase {
     XCTAssertEqual(mockChannel.writtenMessages.count, 1)
 
     let update = try Aae_Calendarsync_UpdateCalendars(
-      serializedData: mockChannel.writtenMessages[0])
+      serializedBytes: mockChannel.writtenMessages[0])
 
     // Both calendars should be sent. One has events and the other is empty (no events in range).
     XCTAssertEqual(update.calendars.count, 2)
@@ -338,8 +331,8 @@ class CalendarSyncClientV2Test: XCTestCase {
     )
   }
 
-  @MainActor func testUnsyncRemovedCalendar() throws {
-    MockEventStore.isAuthorized = true
+  @MainActor func testUnsyncRemovedCalendar() async throws {
+    makeTestClient(isAuthorized: true)
 
     let carID = "Test"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Test")
@@ -363,13 +356,15 @@ class CalendarSyncClientV2Test: XCTestCase {
 
     // The last update is for unsynching the removed calendar.
     let unsync = try Aae_Calendarsync_UpdateCalendars(
-      serializedData: mockChannel.writtenMessages[2])
+      serializedBytes: mockChannel.writtenMessages[2])
     XCTAssertEqual(unsync.calendars.count, 1)
     XCTAssertEqual(unsync.calendars[0].key, self.otherCalendar.calendarIdentifier)
     XCTAssertTrue(unsync.calendars[0].events.isEmpty)
   }
 
   @MainActor func testUnsync_ToSpecificCar() throws {
+    makeTestClient(isAuthorized: true)
+
     let carID = "TestCar"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Car name")
     let mockChannelOtherCar = SecuredCarChannelMock()
@@ -390,11 +385,13 @@ class CalendarSyncClientV2Test: XCTestCase {
     let expectedCalendarsProto = createCalendarsProto(calendarId1: calId1, calendarId2: calId2)
 
     let receivedCalendarsProto =
-      try Aae_Calendarsync_UpdateCalendars(serializedData: mockChannel.writtenMessages.first!)
+      try Aae_Calendarsync_UpdateCalendars(serializedBytes: mockChannel.writtenMessages.first!)
     XCTAssertEqual(receivedCalendarsProto, expectedCalendarsProto)
   }
 
   @MainActor func testUnsync_ToSpecificCar_doesNotSyncAfterReconnection() throws {
+    makeTestClient(isAuthorized: true)
+
     let carID = "TestCar"
     let mockChannel = SecuredCarChannelMock(id: carID, name: "Car name")
 
@@ -419,6 +416,19 @@ class CalendarSyncClientV2Test: XCTestCase {
 
 // MARK: - Helpers
 extension CalendarSyncClientV2Test {
+  @MainActor private func makeTestClient(isAuthorized: Bool = true) {
+    eventStore = MockEventStore(isAuthorized: isAuthorized)
+
+    testClient = CalendarSyncClientV2(
+      eventStore: eventStore,
+      settings: settings,
+      connectedCarManager: mockConnectedCarManager,
+      syncDuration: .days(1)
+    )
+
+    populateCalendars()
+  }
+
   private func startTimestamp(hour: Int, referenceDate: Date) -> Double {
     let date = Foundation.Calendar.current.date(
       byAdding: DateComponents(hour: hour),

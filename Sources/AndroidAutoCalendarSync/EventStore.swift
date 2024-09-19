@@ -20,9 +20,6 @@ public protocol EventStore {
   associatedtype Calendar: AndroidAutoCalendarSync.Calendar
 
   /// Indicates whether the user has authorized access to the store for the current process.
-  static var isAuthorized: Bool { get }
-
-  /// Convenience to get the authorization status from the instance.
   var isAuthorized: Bool { get }
 
   /// Notification name to observe for store changes.
@@ -40,8 +37,4 @@ public protocol EventStore {
     withStart startDate: Date,
     end endDate: Date
   ) throws -> [Event]
-}
-
-extension EventStore {
-  public var isAuthorized: Bool { Self.isAuthorized }
 }
