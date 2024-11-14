@@ -25,7 +25,7 @@ internal import AndroidAutoCalendarSyncProtos
 final class CalendarSyncClientV2<Store: EventStore, SettingsStore: PropertyListStore>:
   FeatureManager
 {
-  private static var log: Logger {
+  nonisolated private static var log: Logger {
     Logger(for: CalendarSyncClientV2.self)
   }
 
@@ -33,7 +33,7 @@ final class CalendarSyncClientV2<Store: EventStore, SettingsStore: PropertyListS
 
   private var settings: CarCalendarSettings<SettingsStore>
 
-  private var observer: NSObjectProtocol?
+  private var observer: Task<Void, Never>?
 
   /// Duration over which to sync the calendars.
   private let syncDuration: CalendarSyncDuration
@@ -70,31 +70,31 @@ final class CalendarSyncClientV2<Store: EventStore, SettingsStore: PropertyListS
   }
 
   deinit {
-    if let observer {
-      NotificationCenter.default.removeObserver(observer)
-    }
+    observer?.cancel()
   }
 
   /// Notify for every calendar event change on the local phone calendar and send the updates to all
   /// the securely connected cars with calendar feature ON.
   func startMonitoringCalendarUpdatesOnConnectedCars() {
-    if let observer {
-      NotificationCenter.default.removeObserver(observer)
-    }
+    observer?.cancel()
 
-    observer = NotificationCenter.default.addObserver(
-      forName: self.eventStore.observingEventName, object: self.eventStore, queue: .main
-    ) { [weak self] notification in
-      guard let self else { return }
+    let eventName = eventStore.observingEventName
+    // Handling user initiated calendar events, so give it top priority.
+    observer = Task(priority: .userInitiated) { @MainActor [weak self] in
+      for await _ in NotificationCenter.default.notifications(named: eventName)
+        .compactMap({ _ in return () })
+      {
+        guard let self else { return }
 
-      Self.log.info("Calendar events changed. Synching calendars with cars.")
-      for car in self.securedCars {
-        self.syncEnabledCalendars(with: car)
-        self.unsyncRemovedCalendars(with: car)
+        Self.log.info("Calendar events changed. Synching calendars with cars.")
+        for car in self.securedCars {
+          self.syncEnabledCalendars(with: car)
+          self.unsyncRemovedCalendars(with: car)
+        }
       }
     }
 
-    Self.log.info("Start listening to the notification center.")
+    Self.log.info("Start listening for calendar event changes.")
   }
 
   // MARK: - Feature Manager Overrides

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 public import EventKit
-public import Foundation
+internal import Foundation
 
 // MARK: - EKEvent conformance to CalendarEvent
 extension EKEvent: CalendarEvent {
@@ -150,6 +150,8 @@ extension EKEventStore: EventStore {
     let authorizationStatus = authorizationStatus(for: .event)
     return authorizationStatus == .authorized
   }
+
+  public var isAuthorized: Bool { Self.isAuthorized }
 
   public var observingEventName: NSNotification.Name {
     NSNotification.Name.EKEventStoreChanged

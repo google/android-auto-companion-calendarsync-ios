@@ -29,6 +29,12 @@ class MockEventStore {
     }
   }
 
+  let isAuthorized: Bool
+
+  init(isAuthorized: Bool = true) {
+    self.isAuthorized = isAuthorized
+  }
+
   func addCalendar(title: String, identifier: String, cgColor: CGColor) {
     let calendar = MockCalendar(title: title, calendarIdentifier: identifier, cgColor: cgColor)
     calendars[identifier] = calendar
@@ -74,8 +80,6 @@ class MockEventStore {
 }
 
 extension MockEventStore: EventStore {
-  static var isAuthorized: Bool = false
-
   public var observingEventName: NSNotification.Name {
     Notification.Name("mockEventStoreChanged")
   }
@@ -101,7 +105,7 @@ extension MockEventStore: EventStore {
   }
 
   func calendars(for identifiers: some Collection<String>) throws -> [MockCalendar] {
-    guard Self.isAuthorized else { throw CalendarSyncClientError.notAuthorized }
+    guard isAuthorized else { throw CalendarSyncClientError.notAuthorized }
     return identifiers.compactMap { calendars[$0] }
   }
 }

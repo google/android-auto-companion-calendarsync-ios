@@ -17,14 +17,14 @@ internal import XCTest
 
 @testable private import AndroidAutoCalendarSync
 
-let store = MockKeyValueStore()
-
 class CarCalendarSettingsTest: XCTestCase {
   private let carID = "someTestCarID"
-  private var settings = CarCalendarSettings(store)
+  private var store: MockKeyValueStore!
+  private var settings: CarCalendarSettings<MockKeyValueStore>!
 
   override func setUp() {
-    store.clear()
+    store = MockKeyValueStore()
+    settings = CarCalendarSettings(store)
   }
 
   func testIsCalendarSyncEnabled_NonExistingCar_ReturnsFalse() {
